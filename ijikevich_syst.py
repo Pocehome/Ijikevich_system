@@ -112,21 +112,21 @@ def draw_separatrice(rhs, limits, v, u, a, b):
         #     time = [0., -max_time]
         
         int_end = integrate_end(limits)
-        time = 6
+        time = 4000
 
-        sep1 = solve_ivp(rhs, [0., time], (v + vec[0]*0.01, u + vec[1]*0.01), method="RK45", rtol=1e-6, events=int_end)
-        v1, u1 = sep1.y
-        plt.plot(v1, u1, '--r')
+        # sep1 = solve_ivp(rhs, [0., time], (v + vec[0]*0.01, u + vec[1]*0.01), method="RK45", rtol=1e-6, events=int_end)
+        # v1, u1 = sep1.y
+        # plt.plot(v1, u1, '--r')
         
         sep1 = solve_ivp(rhs, [0., -time], (v + vec[0]*0.01, u + vec[1]*0.01), method="RK45", rtol=1e-6, events=int_end)
         v1, u1 = sep1.y
         plt.plot(v1, u1, '--r')
 
-        # sep1 = solve_ivp(rhs, [0., time], (v - vec[0]*0.01, u - vec[1]*0.01), method="RK45", rtol=1e-6, events=int_end)
-        # v1, u1 = sep1.y
-        # plt.plot(v1, u1, '--r')
+        sep1 = solve_ivp(rhs, [0., time], (v - vec[0]*0.01, u - vec[1]*0.01), method="RK45", rtol=1e-6, events=int_end)
+        v1, u1 = sep1.y
+        plt.plot(v1, u1, '--r')
         
-        sep1 = solve_ivp(rhs, [0., -time], (v - vec[0]*0.01, u - vec[1]*0.01), method="RK45", rtol=1e-6, events=int_end)
+        sep1 = solve_ivp(rhs, [0., -time], (v - vec[0]*0.02, u - vec[1]*0.02), method="RK45", rtol=1e-6, events=int_end)
         v1, u1 = sep1.y
         plt.plot(v1, u1, '--r')
 
@@ -146,7 +146,7 @@ def draw_saddle_node_separatrice(rhs, limits, v, u, a, b):
         #     time = [0., -max_time]
         
         int_end = integrate_end(limits)
-        time = 2000
+        time = 20
 
         sep1 = solve_ivp(rhs, [0., time], (v + vec[0]*0.005, u + vec[1]*0.005), method="RK45", rtol=1e-6, events=int_end)
         v1, u1 = sep1.y
@@ -203,8 +203,8 @@ def plot_plane(eq_states, ab, limits, trajectories):
     x_vec, y_vec, U, V = eq_quiver(rhs, limits)
     plt.quiver(x_vec, y_vec, U, V, alpha=0.8)
     
-    int_end = integrate_end([[-1.5, 1.5], [-1.5, 1.5]])
-    time = 10
+    int_end = integrate_end(limits)
+    time = 25
 
     # draw trajectories
     for traj in trajectories:
@@ -216,22 +216,30 @@ def plot_plane(eq_states, ab, limits, trajectories):
         v_tr, u_tr = sol.y
         plt.plot(v_tr, u_tr, 'darkgreen')
     
-    # draw equilibrium states
-    for vu in eq_states:
-        v, u = vu
-        point_type = condition_type(v, a, b)
-        print(format_num(v), format_num(u), point_type[0])
+    if a == 0:
+        # Добавление кривой y = x^2 + x поверх
+        v = np.linspace(-10, 10, 100)  # диапазон x для второй кривой
+        u = v**2 + v
+        plt.plot(v, u, label=r"$y = x^2 + x$", color="red")  # Красный цвет для различия
+        plt.legend()  # Добавить легенду
         
-        if point_type[1] and point_type[0] != 'Stable Saddle-Node':
-            plt.plot(v, u, 'bo', markersize=8)
-        else:
-            plt.plot(v, u, 'rx', markersize=13, markeredgewidth=2)
+    else:
+        # draw equilibrium states
+        for vu in eq_states:
+            v, u = vu
+            point_type = condition_type(v, a, b)
+            print(format_num(v), format_num(u), point_type[0])
             
-        if point_type[0] == 'Saddle':
-            draw_separatrice(rhs, limits, v, u, a, b)
-            
-        elif point_type[0] in ('Unstable Saddle-Node', 'Stable Saddle-Node'):
-            draw_saddle_node_separatrice(rhs, limits, v, u, a, b)
+            if point_type[1] and point_type[0] != 'Stable Saddle-Node':
+                plt.plot(v, u, 'bo', markersize=8)
+            else:
+                plt.plot(v, u, 'rx', markersize=13, markeredgewidth=2)
+                
+            if point_type[0] == 'Saddle':
+                draw_separatrice(rhs, limits, v, u, a, b)
+                
+            elif point_type[0] in ('Unstable Saddle-Node', 'Stable Saddle-Node'):
+                draw_saddle_node_separatrice(rhs, limits, v, u, a, b)
 
     plt.xlabel('V')
     plt.ylabel('U')
@@ -261,13 +269,13 @@ if __name__ == '__main__':
     # for i, eq_states in enumerate(arr_eq_states):
     #     plot_plane(eq_states, arr_ab[i], arr_limits[i], arr_trajectories[i])
     
-    ab = [0, 2]
+    ab = [0.6, 0.8]
     eq_states = calc_eq_st(ab[1])
     
     vs = [el[0] for el in eq_states]
     us = [el[1] for el in eq_states]
-    limits = [[min(vs) - 0.4*(max(vs)-min(vs)) - 5, max(vs) + 0.4*(max(vs)-min(vs)) + 5],
-              [min(us) - 0.4*(max(us)-min(us)) - 5, max(us) + 0.4*(max(us)-min(us)) + 5]]
+    limits = [[min(vs) - 0.4*(max(vs)-min(vs)) - 0.1, max(vs) + 0.4*(max(vs)-min(vs)) + 0.1],
+              [min(us) - 0.4*(max(us)-min(us)) - 0.1, max(us) + 0.4*(max(us)-min(us)) + 0.1]]
     trajs = []
     
     plot_plane(eq_states, ab, limits, trajs)
